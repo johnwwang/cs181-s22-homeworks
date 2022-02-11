@@ -32,8 +32,3 @@ def f(x_star, tau):
         y += K(x_i, x_star)*y_i
     
     return y
-
-
-
-if name == "__main__":
-    
