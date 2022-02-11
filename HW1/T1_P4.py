@@ -60,16 +60,35 @@ X = np.vstack((np.ones(years.shape), years)).T
 # is_years is a Boolean variable which indicates whether or not the input variable is
 # years; if so, is_years should be True, and if the input varible is sunspots, is_years
 # should be false
-def make_basis(xx,part='a',is_years=True):
-#DO NOT CHANGE LINES 65-69
+def make_basis(xx, part='a',is_years=True):
+    #DO NOT CHANGE LINES 65-69
     if part == 'a' and is_years:
         xx = (xx - np.array([1960]*len(xx)))/40
-        
+    
     if part == "a" and not is_years:
         xx = xx/20
+    
+    basis = np.ones(xx.shape)
+    
+    if part == 'a':
+        for i in range(1, 6):
+            basis = np.vstack((basis, np.power(xx, i)))
+            
+    elif part == 'b':
+        v = np.vectorize(lambda x, y: np.exp(-(x-y)**2)/25)
+        for i in range(0, 55, 5):
+            basis = np.vstack((basis, v(xx, 1960+i)))
         
+    else:
+        v = np.vectorize(lambda x, y: np.cos(x/y))
+        if part == 'c':
+            j = 6
+        else:
+            j = 26
+        for i in range(1, j):
+            basis = np.vstack((basis, v(xx, i)))
         
-    return None
+    return basis.T
 
 # Nothing fancy for outputs.
 Y = republican_counts
@@ -82,8 +101,8 @@ def find_weights(X,Y):
 # Compute the regression line on a grid of inputs.
 # DO NOT CHANGE grid_years!!!!!
 grid_years = np.linspace(1960, 2005, 200)
-grid_X = np.vstack((np.ones(grid_years.shape), grid_years))
-grid_Yhat  = np.dot(grid_X.T, w)
+grid_X = make_basis(grid_years)
+grid_Yhat  = np.dot(find_weights(make_basis(years), republican_counts), grid_X.T)
 
 # TODO: plot and report sum of squared error for each basis
 

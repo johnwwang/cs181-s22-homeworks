@@ -32,9 +32,24 @@ print(y_train)
 
 def predict_knn(k=1, tau=1):
     """Returns predictions for the values in x_test, using KNN predictor with the specified k."""
-    # TODO: your code here
-    return np.zeros(len(x_test))
-
+    
+    def predict_x(x_star):
+        
+        def K(x_i, x_j):
+            return np.exp(-np.power((x_i-x_j), 2)/tau)
+        
+        d = []
+        
+        for x, y in zip(x_train, y_train):
+            d.append((K(x_star, x), y))
+            
+        d.sort(reverse= True)
+        return sum(x[1] for x in d[:k])/k
+    
+    y = []
+    for x in x_test:
+        y.append(predict_x(x))
+    return np.vectorize(predict_x)(x_test)
 
 def plot_knn_preds(k):
     plt.xlim([0, 12])

@@ -18,10 +18,13 @@
 \usepackage{listings}
 \usepackage{common}
 \usepackage{framed}
+\usepackage{xcolor}
 
 \usepackage[mmddyyyy,hhmmss]{datetime}
 
 \definecolor{verbgray}{gray}{0.9}
+
+\newcommand{\Lagr}{\mathcal{L}}
 
 \lstnewenvironment{csv}{
   \lstset{backgroundcolor=\color{verbgray},
@@ -175,6 +178,29 @@ in the command-line using \texttt{python T1\_P1\_TestCases.py}.
 \end{framed}  
 
 \newpage
+\textcolor{blue}{
+\begin{framed}
+Solutions
+\begin{enumerate}
+    \item The loss function here will be:
+            \begin{equation*}
+              \Lagr(\tau) = \sum_{n=1}^N (y_n - \sum_{i=1, i \neq n}^N \exp\left(\frac{-||x_n-x_i||^2_2}{\tau}\right) y_i)^2 
+            \end{equation*}
+        We don't want to include the $i=n$ case in the inner sum, as we want to include our best guess for $y$, and if $y$ is already in the training set, it defeats the purpose for training on that point.
+    \item With $\Lagr(\tau)$ as defined above:
+        \begin{equation*}
+            \frac{\partial \Lagr}{\partial \tau} = 
+            -2\sum_{n=1}^N ((y_n - \sum_{i=1, i \neq n}^N \exp\left(\frac{-||x_n-x_i||^2_2}{\tau}\right) y_i)
+            (\sum_{i=1, i \neq n}^N \frac{||x_n-x_i||_2^2}{\tau^2}\exp\left(\frac{-||x_n-x_i||^2_2}{\tau}\right)y_i))
+        \end{equation*}
+    \item The loss for $\tau$ = 0.01 is 8.75, loss for $\tau$ = 2: 3.305, and loss for $\tau$ = 100: 120.359. It seems here that the value of $\tau = 2$ did the best, as the loss is minimized in this case.
+    \item The plots are below: \newline
+    \includegraphics[]{1.3.png}
+    \newline In general, for all of these cases, higher the $\tau$, more we overestimate, because the method we use is not normalized. \newline We see that for the $\tau = 0.1$ case, there is a lot of "overfitting" happening, in that the model is extremely accurate for values close to the training data, but not otherwise. This is because the kernel decays exponentially in regards to error, so the points that are not close to the training data have extremely low values due to this. \newline In the $\tau = 2$ case, we see that this is a much better fit to the data, even though it is overestimated, as the $\tau$ used here is such that the decay function doesn't decay too fast or too slow as we move away from training data. \newline In the $\tau = 100.0$ case, there is a lot of smoothing, as the kernel weighs distant points too much. As such, it is not a good fit.
+\end{enumerate}
+\end{framed}
+}
+\newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 2
@@ -222,7 +248,19 @@ As before, you will plot $x^*$ on the x-axis and the prediction $f(x^*)$ on the 
 
 \end{problem}
 
-
+\newpage
+\textcolor{blue}{
+\begin{framed}
+Solutions
+\begin{enumerate}
+    \item The plots for all are below, with code in the supplemental. \newline
+    \includegraphics[scale=0.5]{2.1_plots.png}
+    \item \textcolor{blue}{For the $k=1$ predictor, we see that it just fits the nearest point, so it doesn't average at all. For the $k=3$ predictor, we can see that it averages better than the k=1 predictor, so it "stays between" the points more. Lastly, for the $k=N-1$ predictor, it is at all times extremely close to the sample mean, as it averages all but one of the points.\newline \\  Regarding extrapolation and interpolation, the kNN and Kernel Regressor models don't seem to be similar. For the former, see that in kNN, we predict either the averages of the last $k$ points as x trends towards infinity, or the average of the first $k$ points as x trends towards negative infinity. Unless the average of these points is 0, this prediction will not be zero. In the kernel regressor, as x trends towards infinity and negative infinity, we will trend towards zero, as the kernel function trends towards 0 as the distance from the input $x*$ to the training data $x$ grows to infinity. In regards to interpolation, see that the kNN model averages out the high / low value data points, while the kernel formula "peaks" and favors these high / low value data points (as we see when the predicted input is a training input). I guess in some sense, the $\tau=2$ and $k = 1$ case do look similar (except one is discrete, another is continuous, and we don't normalize in the kernel regressor), though the similarities are limited. \newline \\ 
+    I don't think that there exists some values of $k, \tau$, such that the kNN and kernel based regressor produce the exact same classifier. First off, kNN classifiers aren't smooth, and have some discrete steps in the prediction as we see in our graphs, unlike kernel regressors which are. In addition, as we said before, kNN averages, avoiding predictions that are extremely high or low, while kernel regressor predicts based on these peaks. One case I can think of where there could perhaps exist some value of $k$ or $\tau$ such that the predictors are very, very similar, is if the data is basically defined for all $x \in \mathbb{R}$ - in this case, $k = 1$, and a very small $\tau$ might converge to the same plot, though I am not sure (this might require some real analysis).}
+    \item The reason we didn't vary $\tau$ is because kNN only depends on the $k$-closest to $x^*$. If we look at the distance function we used, it is exponential, which is monotonically increasing. In addition, since the negative L2-norm is what we input to the distance function, as long as $\tau$ is positive, changing $\tau$ does not affect the relative closeness of points to other points, so the $k$ closest neighbors for any input point will be the same regardless of $\tau$.
+\end{enumerate}
+\end{framed}
+}
 \newpage 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -274,6 +312,48 @@ $y$ are scalars, $w$ is also a scalar.
 
 \end{problem}
 
+
+\newpage
+\textcolor{blue}{
+\begin{framed}
+Solution 3
+\begin{enumerate}
+    \item The optimal $w = \frac{\mathbb{E}_x_y(xy)}{\mathbb{E}_x(x^2)}$, as shown below:
+        \begin{gather*}
+            \Lagr(w) = \mathbb{E}_x_y(y-\hat{y})^2 \\
+            = \mathbb{E}_x_y(y-wx)^2 \\ 
+            = \mathbb{E}_x_y(y^2-2wxy-w^2x^2 \\ 
+            = \mathbb{E}_y(y^2) + 2w\mathbb{E}_x_y(xy) + w^2\mathbb{E}_x(x^2)
+        \end{gather*}
+    The last step is by linearity of expectations. Then, we minimize $\Lagr(w)$ by differentiating in respect to w and setting to zero. 
+        \begin{gather*}
+            \frac{d\Lagr}{d w} = 2w\mathbb{E}_x(x^2) - 2\mathbb{E}_x_y(xy) \\
+            0 = 2w*\mathbb{E}_x(x^2) - 2\mathbb{E}_x_y(xy) \\
+            w* = \frac{\mathbb{E}_x_y_(xy)}{\mathbb{E}_x(x^2)}
+        \end{gather*}
+    See that this is a minimum by the second derivative test, since $\mathbb{E}_x(x^2) \geq 0$
+        \begin{gather*}
+            \frac{d^2 \Lagr}{dw^2} = 2\mathbb{E}_x(x^2)
+        \end{gather*}
+    \item We can estimate these by using the sample mean:
+        \begin{gather*}
+            \mathbb{E}_x_y(xy) \approx \frac{1}{N} \sum_n x_n y_n \\
+            \mathbb{E}_x(x^2) \approx \frac{1}{N} \sum_n x_n^2
+        \end{gather*}
+    \item Plugging in our estimations above, and having X be the "design matrix" for x, and Y be the one dimensional vector of outputs y (one dimensional), we see that 
+        \begin{gather*}
+            w^* = \frac{\mathbb{E}_x_y_(xy)}{\mathbb{E}_x(x^2)} \\
+            \approx \frac{\frac{1}{N} \sum_n x_n y_n}{\frac{1}{N} \sum_n x_n^2} \\
+            = \frac{\sum_n x_n y_n}{\sum_n x_n^2}
+            = \frac{XY^T}{XX^T}
+            = (X^TX)^{-1}(X^Ty)
+        \end{gather*}
+        This is the same as the optimal $w^*$ we see in section 2.6!
+    \item None of the assumptions made above assume that variables x and y are jointly Gaussian, as we assumed that $p(x,y)$ is the pdf of any distribution.
+\end{enumerate}
+\end{framed}
+}
+\newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Problem 4
@@ -357,6 +437,23 @@ Given the quality of this fit, do you believe that the number of sunspots contro
 \end{enumerate}
 \end{framed}
 
+\newpage
+\textcolor{blue}{
+\begin{framed}
+Solution 4
+\begin{enumerate}
+    \item Below are both the data and regression lines for each of the sets of basis functions, and the residual sum of squares error. \newline
+    \includegraphics[scale = 1]{4.1_year_errors.png} \newline
+    \includegraphics[scale = 0.55]{4.1_plots.png} \newline
+    \item Below are the data and regression lines for each of the set of basis functions for the second part, as well as squared error. 
+    \newline
+    \includegraphics[scale = 0.55]{PS1_P4_countsvssunspots.png}
+    \includegraphics[]{4.2_errors.png}
+    \newline
+    The best "fit" (lowest squared error) came from the model fit with basis d. However, it is not generalizable - it is impossible that at around 60 sunspots, we'd predict -400 as the count of Republicans. It is likely that this is the best fit because we overfit with 25 dimensions for $w$. For basis c, this is clearly not generalizable as well, given the abrupt spikes between data points. As such, we are left with basis a, which doesn't do the best in terms of loss, but at least doesn't jump to extremes, and is relatively smooth in between the domain of sunspots that we've seen. \newline  It is important to note that we are talking about interpolation here, as extrapolation wise, none of these functions seems to do a great job (a would diverge, c and d would be periodic with the same issues that interpolation brought). Given the quality of the fit, I am not convinced that the number of spots control the number of Republicans in the Senate. Intuitively, that doesn't make any sense. Qualitatively, looking at the graph, it seems like the correlation is near zero, and what is there is just noise - the curve we fit seems pretty arbitrary, but "good" enough that it looks like it fits.
+\end{enumerate}
+\end{framed}
+}
 
 
 \newpage
@@ -365,10 +462,17 @@ Given the quality of this fit, do you believe that the number of sunspots contro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Name}
 
+John Wang 
+
 \subsection*{Collaborators and Resources}
 Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?
 
+Josh Michels, Leonard Tang
+
 \subsection*{Calibration}
 Approximately how long did this homework take you to complete (in hours)? 
+
+15 hours
+
 
 \end{document}
